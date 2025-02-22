@@ -1,28 +1,68 @@
-import { BeakerIcon } from '@heroicons/react/24/solid';
+import { CheckIcon, ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/solid';
 
 
-export default function RunTable({runs, selectRun}) {
+
+export const SortIcon = ({fieldName, sortField}) => {
+    if (sortField == fieldName) {
+        return <ArrowDownIcon />;
+    } else if (sortField == "-" + fieldName) {
+        return <ArrowUpIcon />;
+    } else {
+        return null;
+    }
+};
+
+
+let columns = new Map([
+    ["Plan", "start.plan_name"],
+    ["Scan", "start.scan_name"],
+    ["Sample", "start.sample_name"],
+    ["Exit Status", "stop.exit_status"],
+    ["Start", "start.time"],
+    ["UID", "start.uid"],
+    ["Proposal", "start.proposal"],
+    ["ESAF", "start.esaf"],
+]);
+
+
+export default function RunTable({runs, selectRun, sortField, setSortField}) {
     // A table for displaying a sequence of runs to the user
     // Includes widgets for sorting, etc
 
+    // Curried version of setSortField for each column
+    const sortFieldParser = (field) => {
+        return (event) => {
+            setSortField((prevField) => {
+                if (prevField == field) {
+                    // Reverse sort order
+                    return "-" + field;
+                } else {
+                    // Forward sort order
+                    return field;
+                }
+            });
+        };
+    };
+
+    // Render
     return (
         <table className="table table-pin-rows w-full text-left rtl:text-right text-gray-500 dark:text-gray-400">
           <thead className="text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
             <tr>
-              <th><BeakerIcon /></th>
-              <th>Plan</th>
-              <th>Scan</th>
-              <th>Sample</th>
-              <th>Exit Status</th>
-              <th>Datetime</th>
-              <th>UID</th>
-              <th>Proposal</th>
-              <th>ESAF</th>
+              <th><CheckIcon /></th>
+              {[...columns.keys()].map((name) => {
+                  const field = columns.get(name);
+                  return (
+                      <th onClick={sortFieldParser(field)} key={"column-" + field}>
+                        { name } <SortIcon fieldName={field} sortField={sortField} />
+                      </th>
+                  );
+              })}
             </tr>
           </thead>
           <tbody>
             {runs.map(run => (
-                <Row run={run} key={run.id} onSelect={selectRun} />
+                <Row run={run} key={run["start.uid"]} onSelect={selectRun} />
             ))}
           </tbody>
         </table>
@@ -34,7 +74,7 @@ export function Row({ run, onSelect }) {
     
     // Handler for selecting a run
     const handleCheckboxChecked = (event) => {
-        onSelect(run.id, event.target.checked);
+        onSelect(run['start.uid'], event.target.checked);
     };
 
     // Prepare additional data
@@ -42,17 +82,20 @@ export function Row({ run, onSelect }) {
     if ( run.hasOwnProperty("start_time") ) {
         start_time = run.start_time.toLocaleString();
     }
+    const uid = run['start.uid'];
     return (
         <tr>
 	  <td><input type="checkbox" id="checkbox" className="checkbox" onChange={handleCheckboxChecked} /></td>
-          <td>{run.plan}</td>
-          <td>{run.scan_name}</td>
-          <td>{run.sample_name}</td>
-          <td>{run.exit_status}</td>
-          <td>{start_time}</td>
-          <td>{run.id}</td>
-          <td>{run.proposal}</td>
-          <td>{run.esaf}</td>
+          {[...columns.keys()].map((key) => {
+              let value = run[columns.get(key)];
+              // Format dates
+              if (value instanceof Date) {
+                  value = value.toLocaleString();
+              }
+              return (
+                  <td key={uid+columns.get(key)}>{value}</td>
+              );
+          })}
         </tr>
 
     );
