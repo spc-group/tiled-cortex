@@ -1,8 +1,14 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { FunnelIcon, PresentationChartLineIcon } from '@heroicons/react/24/solid';
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQuery,
+} from '@tanstack/react-query';
 
-import RunTable from "./run_table";
+import RunTable, { allColumns } from "./run_table";
+import { getRuns } from "./tiled_api";
+
 
 
 export function Paginator({ runCount, pageLimit, setPageLimit, pageOffset, setPageOffset }) {
@@ -22,6 +28,7 @@ export function Paginator({ runCount, pageLimit, setPageLimit, pageOffset, setPa
             return newOffset;
         });
     };
+
     // Render
     const currentPage = (pageOffset / runsPerPage) + 1;
     return (
@@ -46,71 +53,51 @@ export function Paginator({ runCount, pageLimit, setPageLimit, pageOffset, setPa
 }
 
 export default function RunList() { 
-    // State for keeping track of filters
-    const [filters, setFilters] = useState({});
     // State for keeping track of pagination
     const [pageLimit, setPageLimit] = useState(10);
-    const [currentPage, setCurrentPage] = useState(1);
-    function previousPage() {
-        setCurrentPage((prevPage) => prevPage-1);
+    const [pageOffset, setPageOffset] = useState(0);
+
+    // State for selecting which field to use for sorting
+    const [sortField, setSortField] = useState(null);
+
+    // State variables to keep track of how to filer the runs
+    const columns = [...allColumns];
+    for (let col of columns) {
+        [ col.filter, col.setFilter ] = useState("");
     }
-    function nextPage() {
-        setCurrentPage((prevPage) => prevPage+1);
-    }
-    // Hook to retrieve new runs from the API
-    async function getRuns() {
-        // Retrieve list of runs from the API
-	const response = await axios.get('http://localhost:8000/api/v1/search/scans', {
-	    params: {
-		sort: "-start.time",
-                fields: ["metadata"],
-                "page[offset]": currentPage*pageLimit,
-                "page[limit]": pageLimit,
-	    }
-	});
-        // Parse into a sensible list defintion
-	const runs = response.data.data.map((run) => {
-	    const start_doc = run.attributes.metadata.start;
-	    const stop_doc = (run.attributes.metadata.stop ?? {});
-	    const date = new Date(start_doc.time * 1000);
-	    return {
-		id: run.id,
-		plan: start_doc.plan_name,
-		scan_name: start_doc.scan_name ?? null,
-		sample_name: start_doc.sample_name ?? null,
-		exit_status: stop_doc.exit_status ?? null,
-		start_time: date.toLocaleString(),
-		proposal: start_doc.proposal ?? null,
-		esaf: start_doc.esaf ?? null,
-	    };
-	});
-	return await runs;
-    }
-    useEffect(() => {
-	getRuns().then(data => setAllRuns(data));
-    }, [filters, pageLimit, currentPage]);
-    // Holds the list of all the runs in the run list
-    const [allRuns, setAllRuns] = useState([
-    ]);
+    const filterStates = columns.map((col) => col.filter);
+
+    const loadRuns = async () => {
+        // Prepare list of filters
+        const filters = new Map();
+        for (let col of columns) {
+            if (col.filter !== "") {
+                filters.set(col.field, col.filter);
+            }
+        }
+        return await getRuns({filters, pageLimit, pageOffset, sortField});
+    };
+
+    // Query for retrieving data for the list of runs
+    const { isLoading, error, result } = useQuery({
+        queryKey: ['all-runs'],
+        queryFn: loadRuns(),
+    });
+    const allRuns = result === undefined ? [] : result.runs;
+    const runCount = result === undefined ? 0 : result.count;
     return (
         <div>
-          <div className="collapse bg-base-200">
-            <input type="checkbox" />
-            <div className="collapse-title text-xl font-medium">
-	      <FunnelIcon />Filters
-            </div>
-            <div className="collapse-content">
-              Filter me!
-            </div>
+            <button className="btn btn-primary">
+              <PresentationChartLineIcon />Plot
+            </button>
+
+          <div>
+            <Paginator runCount={runCount} pageLimit={pageLimit} setPageLimit={setPageLimit} pageOffset={pageOffset} setPageOffset={setPageOffset} />
           </div>
 
-          <button className="btn btn-primary">
-            <PresentationChartLineIcon />Plot
-          </button>
-
-          <div className="relative overflow-x-auto">
-	    <RunTable runs={allRuns} />
-          </div>
+            <div className="relative overflow-x-auto">
+	      <RunTable runs={allRuns} columns={columns} sortField={sortField} setSortField={setSortField} />
+            </div>
         </div>
     );
 }

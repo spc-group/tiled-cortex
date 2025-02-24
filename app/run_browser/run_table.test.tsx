@@ -56,7 +56,16 @@ describe("run table", () => {
         // Check that we updated the sort field properly
         expect(setSortField.mock.calls).toHaveLength(1);
         expect(setSortField.mock.calls[0][0]("start.uid")).toEqual("-start.uid");
-    });    
+    });
+    it("turns off sorting", async () => {
+	render(<RunTable runs={[]} setSortField={setSortField} sortField={"-start.uid"} />);
+        const heading = screen.getByText("UID");
+        await user.click(heading);
+        // Check that we updated the sort field properly
+        expect(setSortField.mock.calls).toHaveLength(1);
+        expect(setSortField.mock.calls[0][0]("-start.uid")).toEqual(null);
+    });
+
 });
 
 

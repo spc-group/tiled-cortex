@@ -1,9 +1,16 @@
 import * as React from "react";
 import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event'
+import userEvent from '@testing-library/user-event';
+import { getRuns } from "./tiled_api";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import RunList, { Paginator } from "./run_list";
+
+
+jest.mock("./tiled_api", () => ({
+    "getRuns": jest.fn(() => Promise.resolve([])),
+}));
 
 
 describe("paginator", () => {
@@ -74,7 +81,31 @@ describe("paginator", () => {
 
 
 describe("run list", () => {
-    it("selects a run", () => {
-	render(<RunList />);
+    let user;
+    beforeEach(async () => {
+	getRuns.mockClear();
+	const queryClient = new QueryClient();
+	await React.act(async () => {
+	    render(
+                <QueryClientProvider client={queryClient}>
+                  <RunList />
+                </QueryClientProvider>);
+	});
+	user = userEvent.setup();
+
     });
+    it("selects a run", () => {
+    });
+    it("applies filters", async () => {
+        // Find a filter text box
+        const textbox = screen.getByPlaceholderText("Filter by UID");
+	getRuns.mockClear();
+        await user.type(textbox, "a");
+	expect(getRuns.mock.calls).toHaveLength(1);
+	expect(getRuns.mock.calls[0][0]["filters"]).toEqual(new Map([["start.uid", "a"]]));
+    });
+
+});
+
+describe("API client", () => {
 });

@@ -1,6 +1,11 @@
 import type { Route } from "./+types/home";
+import {
+    QueryClient,
+    QueryClientProvider,
+} from  '@tanstack/react-query';
 import RunList from "./run_list";
 import Navbar from "../navbar";
+
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -9,11 +14,14 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
+const queryClient = new QueryClient();
+
+
 export default function RunBrowser() {
     return (
-        <div>
+        <QueryClientProvider client={queryClient}>
           <Navbar />
           <RunList />
-        </div>
+	</QueryClientProvider>
     );
 }

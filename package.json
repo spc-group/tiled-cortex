@@ -26,6 +26,8 @@
     "@babel/preset-react": "^7.26.3",
     "@react-router/dev": "^7.1.5",
     "@tailwindcss/vite": "^4.0.0",
+    "@tanstack/eslint-plugin-query": "^5.66.1",
+    "@tanstack/react-query": "^5.66.9",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
