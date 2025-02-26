@@ -1,6 +1,9 @@
 # Emacs stuff
 *~
 
+# Keep secrets out of VCS
+.env.production
+
 .DS_Store
 /node_modules/
 

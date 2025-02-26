@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FunnelIcon, PresentationChartLineIcon } from '@heroicons/react/24/solid';
+import { PresentationChartLineIcon } from '@heroicons/react/24/solid';
 import {
   QueryClient,
   QueryClientProvider,
@@ -11,43 +11,41 @@ import { getRuns } from "./tiled_api";
 
 
 
-export function Paginator({ runCount, pageLimit, setPageLimit, pageOffset, setPageOffset }) {
-    const [runsPerPage, setRunsPerPage] = useState(10);
+export function Paginator({ runCount, pageLimit=10, setPageLimit, pageOffset, setPageOffset }) {
     // Handlers for swapping pages
     const previousPage = () => {
         setPageOffset((prevOffset) => {
-            const newOffset = Math.max(prevOffset - runsPerPage, 0);
-            setPageLimit(newOffset + runsPerPage);
+            const newOffset = Math.max(prevOffset - pageLimit, 0);
             return newOffset;
         });
     };
     const nextPage = () => {
         setPageOffset((prevOffset) => {
-            const newOffset = Math.min(pageOffset + runsPerPage, runCount - runsPerPage);
-            setPageLimit(newOffset + runsPerPage);
+            const newOffset = Math.min(pageOffset + pageLimit, runCount - pageLimit);
             return newOffset;
         });
     };
 
     // Render
-    const currentPage = (pageOffset / runsPerPage) + 1;
+    const currentPage = (pageOffset / pageLimit) + 1;
     return (
-        <div>
+        <div className="space-x-4 inline">
           <div className="join">
             <button className="join-item btn" onClick={previousPage} disabled={pageOffset == 0}>«</button>
-            <button className="join-item btn">Page {currentPage}</button>
-            <button className="join-item btn" onClick={nextPage} disabled={pageOffset+runsPerPage>=runCount}>»</button>
-            <div>{pageOffset} {runsPerPage} {runCount}</div>
+            <button className="join-item btn">{pageOffset} - {pageOffset + pageLimit}</button>
+            <button className="join-item btn" onClick={nextPage} disabled={pageOffset+pageLimit>=runCount}>»</button>
           </div>
-          <select className="select w-20" value={pageLimit} onChange={e => setPageLimit(e.target.value)}>
-            <option disabled>Runs per page</option>
-            <option>5</option>
-            <option>10</option>
-            <option>20</option>
-            <option>50</option>
-            <option>100</option>
-          </select>
-
+	  <span>{ runCount } Total</span>
+          <div className="inline">
+            <select className="select w-20" value={pageLimit} onChange={e => setPageLimit(Number(e.target.value))}>
+              <option disabled>Runs per page</option>
+              <option>5</option>
+              <option>10</option>
+              <option>20</option>
+              <option>50</option>
+              <option>100</option>
+            </select>
+          </div>
         </div>
     );
 }
@@ -56,6 +54,7 @@ export default function RunList() {
     // State for keeping track of pagination
     const [pageLimit, setPageLimit] = useState(10);
     const [pageOffset, setPageOffset] = useState(0);
+    const [runCount, setRunCount] = useState(0);
 
     // State for selecting which field to use for sorting
     const [sortField, setSortField] = useState(null);
@@ -75,29 +74,44 @@ export default function RunList() {
                 filters.set(col.field, col.filter);
             }
         }
-        return await getRuns({filters, pageLimit, pageOffset, sortField});
+	const theRuns = await getRuns({filters, pageLimit, pageOffset, sortField});
+        return theRuns;
     };
 
     // Query for retrieving data for the list of runs
-    const { isLoading, error, result } = useQuery({
-        queryKey: ['all-runs'],
-        queryFn: loadRuns(),
+    const { isLoading, error, data } = useQuery({
+        queryKey: ['all-runs', sortField, pageLimit, pageOffset, ...filterStates],
+        queryFn: loadRuns,
     });
-    const allRuns = result === undefined ? [] : result.runs;
-    const runCount = result === undefined ? 0 : result.count;
+    if (error !== null) {
+	return (<div>{error.code} - {error.message}</div>);
+    }
+    let allRuns;
+    if (isLoading) {
+	allRuns = [];
+    } else {
+	allRuns = data.runs;
+	if (runCount != data.count) {
+	    setRunCount(data.count);
+	}
+    }
     return (
-        <div>
-            <button className="btn btn-primary">
-              <PresentationChartLineIcon />Plot
+        <div className="mx-auto max-w-7xl">
+          <div className="p-4">
+            <Paginator runCount={runCount}
+                       pageLimit={pageLimit}
+                       setPageLimit={setPageLimit}
+                       pageOffset={pageOffset}
+                       setPageOffset={setPageOffset} />
+            <button className="btn btn-primary float-right">
+              <PresentationChartLineIcon className="size-5 inline" />Plot
             </button>
 
-          <div>
-            <Paginator runCount={runCount} pageLimit={pageLimit} setPageLimit={setPageLimit} pageOffset={pageOffset} setPageOffset={setPageOffset} />
           </div>
 
-            <div className="relative overflow-x-auto">
-	      <RunTable runs={allRuns} columns={columns} sortField={sortField} setSortField={setSortField} />
-            </div>
+          <div className="relative overflow-x-auto">
+	    <RunTable runs={allRuns} columns={columns} sortField={sortField} setSortField={setSortField} />
+          </div>
         </div>
     );
 }

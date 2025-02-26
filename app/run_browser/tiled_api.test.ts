@@ -1,7 +1,8 @@
 import { getRuns } from "./tiled_api";
+import { vi, describe, it, expect, beforeEach } from "vitest";
 
 const client = {
-    get: jest.fn(async () => {
+    get: vi.fn(async () => {
 	return {
 	    data: {
 		data: [],
@@ -16,10 +17,10 @@ describe("getRuns() function", () => {
 	client.get.mockClear();
     });
     it("applies filters", async () => {
-	const filters = {
-	    "start.uid": "58839482",
-	    "stop.exit_status": "success",
-	};
+	const filters = new Map([
+	    ["start.uid", "58839482"],
+	    ["stop.exit_status", "success"],
+	]);
 	await getRuns({ pageOffset: 10, pageLimit: 20 , client: client, filters: filters });
 	expect(client.get.mock.calls).toHaveLength(1);
 	const params = client.get.mock.calls[0][1].params;

@@ -1,16 +1,22 @@
 import * as React from "react";
-import '@testing-library/jest-dom';
-import { render, screen, within } from '@testing-library/react';
+import '@testing-library/jest-dom/vitest';
+import { expect, describe, it, beforeEach, afterEach, vi, cleanup } from "vitest";
+import { render, screen, within, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event'
 
 import RunTable, {Row} from "./run_table";
+
+
+afterEach(() => {
+    cleanup();
+});
 
 
 describe("run table", () => {
     let user, setSortField;
     beforeEach(() => {
         user = userEvent.setup();
-        setSortField = jest.fn((newLimit) => {});
+        setSortField = vi.fn((newLimit) => {});
     });
     it("creates rows for each run", () => {
 	const runs = [
@@ -22,7 +28,7 @@ describe("run table", () => {
 	expect(screen.getByText("391c9a55-8dfa-4faa-be49-e60140596b7c")).toBeInTheDocument();
     });
     it("can (de)select a run", async () => {
-	const selectRun = jest.fn((uid, isSelected) => {});
+	const selectRun = vi.fn((uid, isSelected) => {});
 	// Prepare the UI
 	const runs = [{"start.uid": "4e4a2ec3-5d33-4f47-b6a3-15cfdf1e41aa"}];
 	render(<RunTable runs={runs} selectRun={selectRun} />);

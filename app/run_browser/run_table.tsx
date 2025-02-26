@@ -1,12 +1,12 @@
-import { CheckIcon, ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/solid';
+import { CheckIcon, ArrowUpIcon, ArrowDownIcon, ArrowDownTrayIcon } from '@heroicons/react/24/solid';
 import { useState } from "react";
 
 
 export const SortIcon = ({fieldName, sortField}) => {
     if (sortField == fieldName) {
-        return <ArrowDownIcon />;
+        return <ArrowDownIcon className="size-4 inline" />;
     } else if (sortField == "-" + fieldName) {
-        return <ArrowUpIcon />;
+        return <ArrowUpIcon className="size-4 inline" />;
     } else {
         return null;
     }
@@ -84,7 +84,8 @@ export default function RunTable({runs, selectRun, sortField, setSortField, colu
         <table className="table table-pin-rows w-full text-left rtl:text-right text-gray-500 dark:text-gray-400">
           <thead className="text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
             <tr>
-              <th><CheckIcon /></th>
+              <th className="text-center"><CheckIcon className="inline" /></th>
+              <th className="text-center"><ArrowDownTrayIcon className="size-6 inline" /></th>
               {columns.map((col) => {
                   return (
                       <th key={"column-" + col.name}>
@@ -92,7 +93,10 @@ export default function RunTable({runs, selectRun, sortField, setSortField, colu
                           { col.label } <SortIcon fieldName={col.field} sortField={sortField} />
                         </div>
                         <div>
-                          <input type="text" placeholder={"Filter by " + col.label} value={col.filter} onChange={(e) => col.setFilter(e.target.value)} />
+                          <input type="text"
+                                 placeholder={"Filter " + col.label}
+                                 className="input input-xs input-ghost w-full max-w-xs" value={col.filter}
+                                 onChange={(e) => col.setFilter(e.target.value)} />
                         </div>
                       </th>
                   );
@@ -124,7 +128,18 @@ export function Row({ run, onSelect, columns=allColumns }) {
     const uid = run['start.uid'];
     return (
         <tr>
-	  <td><input type="checkbox" id="checkbox" className="checkbox" onChange={handleCheckboxChecked} /></td>
+	  <td>
+            <input type="checkbox" id="checkbox" className="checkbox" onChange={handleCheckboxChecked} /></td>
+          <td>
+                      <div className="dropdown dropdown-hover dropdown-right">
+              <div tabIndex={0} role="button" className="btn btn-ghost m-1 btn-sm"><ArrowDownTrayIcon className="inline size-4" /></div>
+              <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
+                <li><a>XDI</a></li>
+                <li><a>NeXus</a></li>
+              </ul>
+                      </div>
+          </td>
+
           {columns.map((col) => {
               let value = run[col.field];
               // Format dates
