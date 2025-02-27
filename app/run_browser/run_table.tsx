@@ -1,5 +1,8 @@
 import { CheckIcon, ArrowUpIcon, ArrowDownIcon, ArrowDownTrayIcon } from '@heroicons/react/24/solid';
+import { useQuery } from '@tanstack/react-query';
+
 import { useState } from "react";
+import { tiledUri, getApiInfo } from "./tiled_api";
 
 
 export const SortIcon = ({fieldName, sortField}) => {
@@ -112,7 +115,13 @@ export default function RunTable({runs, selectRun, sortField, setSortField, colu
     );
 };
 
-export function Row({ run, onSelect, columns=allColumns }) {
+
+const exportFormat = (mimetype) => {
+    return {
+    }
+};
+
+export function Row({ run, onSelect, columns=allColumns, apiUri }) {
     // A row in the run table for a given run
     
     // Handler for selecting a run
@@ -120,22 +129,68 @@ export function Row({ run, onSelect, columns=allColumns }) {
         onSelect(run['start.uid'], event.target.checked);
     };
 
+    // Decide which export formats we support
+    const { isLoading, error, data } = useQuery({
+        queryKey: ['api-info'],
+        queryFn: async () => {
+            return await getApiInfo();
+        },
+    });
+    const exportFormats = [];
+    if (!isLoading) {
+        // Add formats from structure family
+        for (let mimeType of data.formats[run.structure_family] || []) {
+            const aliases = data.aliases[run.structure_family][mimeType] || [];
+            exportFormats.push({
+                mimeType: mimeType,
+                label: [...aliases, mimeType][0],
+                defaultFilename: `test_run.${run.uid}`,
+            });
+        }
+        // Add formats from specs
+        for (let spec of run.specs || []) {
+            for (let mimeType of data.formats[spec.name] || []) {
+                const aliases = data.aliases[spec.name][mimeType] || [];
+                const uidFragment = run.uid.split("-")[0];
+                const suffix = aliases.length > 0 ? `.${aliases[0]}` : "";
+                const scanName = run['start.scan_name'];
+                const sampleName = run["start.sample_name"];
+                exportFormats.push({
+                    mimeType: mimeType,
+                    label: [...aliases, mimeType][0],
+                    defaultFilename: `${uidFragment}-${sampleName}-${scanName}${suffix}`,
+                });
+            }
+        }
+    }
     // Prepare additional data
     let start_time = "";
     if ( run.hasOwnProperty("start_time") ) {
         start_time = run.start_time.toLocaleString();
     }
     const uid = run['start.uid'];
+    const runUri = apiUri + "container/full/" + run.uid;
+    
+
     return (
         <tr>
 	  <td>
             <input type="checkbox" id="checkbox" className="checkbox" onChange={handleCheckboxChecked} /></td>
           <td>
-                      <div className="dropdown dropdown-hover dropdown-right">
+            <div className="dropdown dropdown-hover dropdown-right">
               <div tabIndex={0} role="button" className="btn btn-ghost m-1 btn-sm"><ArrowDownTrayIcon className="inline size-4" /></div>
               <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
-                <li><a>XDI</a></li>
-                <li><a>NeXus</a></li>
+                {
+                    exportFormats.map((format) => {
+                        return (
+                            <li key={`${run.uid}-${format.mimeType}`}>
+			      <a href={`${runUri}?format=${format.mimeType}`}
+                                 download={format.defaultFilename}>
+			        {format.label}
+			      </a>
+			    </li>);
+                    })
+                }
               </ul>
                       </div>
           </td>

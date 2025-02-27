@@ -2,13 +2,20 @@ import axios from "axios";
 
 let envHost = import.meta.env.VITE_TILED_HOST ;
 export const tiledHost = envHost === undefined ? "" : envHost;
+export const tiledUri = tiledHost + "/api/v1/scans";
 
 export const v1Client = axios.create({
-    baseURL: tiledHost + "/api/v1/",
+    baseURL: tiledUri,
 });
 
 
-// Hook to retrieve new runs from the API
+// Retrieve the info about API accepted formats, etc.
+export const getApiInfo = async () => {
+    console.log("Hello");
+};
+
+
+// Retrieve set of runs metadata from the API
 export const getRuns = async ({ pageOffset, pageLimit, filters = new Map(), client = v1Client, sortField= null}) => {
     // Set up query parameters
     const params = new URLSearchParams();
@@ -32,6 +39,7 @@ export const getRuns = async ({ pageOffset, pageLimit, filters = new Map(), clie
 	const start_doc = run.attributes.metadata.start;
 	const stop_doc = (run.attributes.metadata.stop ?? {});
 	const date = new Date(start_doc.time * 1000);
+	const specs = run.attributes.specs;
 	return {
 	    "start.uid": run.id,
 	    "start.plan_name": start_doc.plan_name,
@@ -41,6 +49,8 @@ export const getRuns = async ({ pageOffset, pageLimit, filters = new Map(), clie
 	    "start.time": date.toLocaleString(),
 	    "start.proposal": start_doc.proposal ?? null,
 	    "start.esaf": start_doc.esaf ?? null,
+	    "specs": specs === null ? [] : specs,
+	    "structure_family": run.attributes.structure_family,
 	};
     });
     return await {

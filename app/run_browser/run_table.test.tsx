@@ -3,8 +3,16 @@ import '@testing-library/jest-dom/vitest';
 import { expect, describe, it, beforeEach, afterEach, vi, cleanup } from "vitest";
 import { render, screen, within, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event'
+import {
+    QueryClient,
+    QueryClientProvider,
+} from  '@tanstack/react-query';
 
-import RunTable, {Row} from "./run_table";
+
+import RunTable, {Row, useQuery} from "./run_table";
+
+
+const queryClient = new QueryClient();
 
 
 afterEach(() => {
@@ -76,6 +84,67 @@ describe("run table", () => {
 
 
 describe("run table row", () => {
+    beforeEach(() => {
+        vi.mock('@tanstack/react-query', async (importOriginal) => {
+            return {
+                ...await importOriginal(),
+                useQuery: () => ({
+                    isLoading: false,
+                    error: "hello",
+                    data: {
+                        formats: {
+                            "container": [
+                                "application/x-hdf5",
+                                "application/json"
+                            ],
+                            "XASRun": [
+                                "text/x-xdi",
+                            ],
+                        },
+                        "aliases": {
+                            "container": {
+                                "application/x-hdf5": [
+                                    "h5",
+                                    "hdf5"
+                                ],
+                                "application/json": [
+                                    "json",
+                                ],
+                            },
+                            "XASRun": {
+                                "text/x-xdi": [
+                                    "xdi",
+                                ],
+                            },
+                        },
+                    }
+                    
+                })
+            };
+        });
+    });
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+    it("shows export buttons", () => {
+        const run = {
+            uid: "883847",
+	    "start.sample_name": "CrO3",
+	    "start.scan_name": "NiK",
+            specs: [{name: "XASRun", version: "1.0"}],
+            structure_family: "container",
+        };
+	render(<QueryClientProvider client={queryClient}><Row run={run} apiUri={"https://remotehost/api/v1/"} /></QueryClientProvider>);
+	const link = screen.getByText("xdi");
+        expect(link).toBeInTheDocument();
+        const href = Object.values(link)[0].memoizedProps.href;
+        expect(href).toContain("https://remotehost/api/v1/");
+        expect(href).toContain(run.uid);
+        expect(href).toContain("format=text/x-xdi");
+	const filename = Object.values(link)[0].memoizedProps.download;
+	expect(filename).toEqual("883847-CrO3-NiK.xdi");
+    });
+
     it("has the correct columns", () => {
         const run = {
             "start.uid": "4e4a2ec3-5d33-4f47-b6a3-15cfdf1e41aa",
