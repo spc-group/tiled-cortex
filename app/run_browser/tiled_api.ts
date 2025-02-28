@@ -2,11 +2,12 @@ import axios from "axios";
 
 let envHost = import.meta.env.VITE_TILED_HOST ;
 export const tiledHost = envHost === undefined ? "" : envHost;
-export const tiledUri = tiledHost + "/api/v1/scans";
+export const tiledUri = tiledHost + "/v1/";
 
 export const v1Client = axios.create({
     baseURL: tiledUri,
 });
+
 
 
 // Retrieve the info about API accepted formats, etc.
@@ -16,7 +17,7 @@ export const getApiInfo = async () => {
 
 
 // Retrieve set of runs metadata from the API
-export const getRuns = async ({ pageOffset, pageLimit, filters = new Map(), client = v1Client, sortField= null}) => {
+export const getRuns = async ({ pageOffset, pageLimit, filters = new Map(), client = v1Client, sortField= null, catalog = "scans"}) => {
     // Set up query parameters
     const params = new URLSearchParams();
     if (sortField !== null) {
@@ -31,7 +32,7 @@ export const getRuns = async ({ pageOffset, pageLimit, filters = new Map(), clie
 	params.append("filter[eq][condition][value]", `"${value}"`);
     }
     // retrieve list of runs from the API
-    const response = await client.get('search/scans', {
+    const response = await client.get(`search/${catalog}`, {
 	params: params,
     });
     // Parse into a sensible list defintion

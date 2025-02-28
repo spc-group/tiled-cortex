@@ -1,4 +1,5 @@
 import { CheckIcon, ArrowUpIcon, ArrowDownIcon, ArrowDownTrayIcon } from '@heroicons/react/24/solid';
+import { BeakerIcon } from '@heroicons/react/24/outline';
 import { useQuery } from '@tanstack/react-query';
 
 import { useState } from "react";
@@ -7,9 +8,9 @@ import { tiledUri, getApiInfo } from "./tiled_api";
 
 export const SortIcon = ({fieldName, sortField}) => {
     if (sortField == fieldName) {
-        return <ArrowDownIcon className="size-4 inline" />;
+        return <ArrowDownIcon title="Sort ascending" className="size-4 inline" />;
     } else if (sortField == "-" + fieldName) {
-        return <ArrowUpIcon className="size-4 inline" />;
+        return <ArrowUpIcon title="Sort descending" className="size-4 inline" />;
     } else {
         return null;
     }
@@ -87,8 +88,8 @@ export default function RunTable({runs, selectRun, sortField, setSortField, colu
         <table className="table table-pin-rows w-full text-left rtl:text-right text-gray-500 dark:text-gray-400">
           <thead className="text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
             <tr>
-              <th className="text-center"><CheckIcon className="inline" /></th>
-              <th className="text-center"><ArrowDownTrayIcon className="size-6 inline" /></th>
+              <th className="text-center"><CheckIcon className="inline" data="Selection checkmark" /></th>
+              <th className="text-center"><ArrowDownTrayIcon className="size-6 inline" title="Download icon" /></th>
               {columns.map((col) => {
                   return (
                       <th key={"column-" + col.name}>
@@ -151,7 +152,7 @@ export function Row({ run, onSelect, columns=allColumns, apiUri }) {
         for (let spec of run.specs || []) {
             for (let mimeType of data.formats[spec.name] || []) {
                 const aliases = data.aliases[spec.name][mimeType] || [];
-                const uidFragment = run.uid.split("-")[0];
+                const uidFragment = run.uid === undefined ? "" : run.uid.split("-")[0];
                 const suffix = aliases.length > 0 ? `.${aliases[0]}` : "";
                 const scanName = run['start.scan_name'];
                 const sampleName = run["start.sample_name"];
@@ -170,7 +171,11 @@ export function Row({ run, onSelect, columns=allColumns, apiUri }) {
     }
     const uid = run['start.uid'];
     const runUri = apiUri + "container/full/" + run.uid;
-    
+    const specs = run.specs === undefined ? [] : run.specs;
+    const specNames = specs.map((spec) => spec.name);
+    const isBlueskyRun = specNames.includes("BlueskyRun");
+    const dataSpecs = ["XASRun"];
+    const isDataRun = specNames.filter((thisSpec) => dataSpecs.includes(thisSpec)).length > 0;
 
     return (
         <tr>
@@ -178,7 +183,7 @@ export function Row({ run, onSelect, columns=allColumns, apiUri }) {
             <input type="checkbox" id="checkbox" className="checkbox" onChange={handleCheckboxChecked} /></td>
           <td>
             <div className="dropdown dropdown-hover dropdown-right">
-              <div tabIndex={0} role="button" className="btn btn-ghost m-1 btn-sm"><ArrowDownTrayIcon className="inline size-4" /></div>
+              <div tabIndex={0} role="button" className="btn btn-ghost m-1 btn-sm"><ArrowDownTrayIcon className="inline size-4" title="Download icon" /></div>
               <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
                 {
                     exportFormats.map((format) => {
@@ -192,9 +197,16 @@ export function Row({ run, onSelect, columns=allColumns, apiUri }) {
                     })
                 }
               </ul>
-                      </div>
+            </div>
           </td>
 
+          <td>
+            {!isDataRun ? "" :
+                <BeakerIcon title="Data run icon" className="size-4" />
+            }
+          </td>
+
+          
           {columns.map((col) => {
               let value = run[col.field];
               // Format dates

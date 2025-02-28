@@ -65,6 +65,7 @@ export default function RunList() {
         [ col.filter, col.setFilter ] = useState("");
     }
     const filterStates = columns.map((col) => col.filter);
+    const catalog = "scans";
 
     const loadRuns = async () => {
         // Prepare list of filters
@@ -74,7 +75,7 @@ export default function RunList() {
                 filters.set(col.field, col.filter);
             }
         }
-	const theRuns = await getRuns({filters, pageLimit, pageOffset, sortField});
+	const theRuns = await getRuns({filters, pageLimit, pageOffset, sortField, catalog});
         return theRuns;
     };
 

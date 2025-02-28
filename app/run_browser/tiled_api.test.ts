@@ -1,4 +1,4 @@
-import { getRuns } from "./tiled_api";
+import { getRuns, Container, parseNode } from "./tiled_api";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 
 const client = {
@@ -12,6 +12,7 @@ const client = {
     }),
 };
 
+
 describe("getRuns() function", () => {
     beforeEach(() => {
 	client.get.mockClear();
@@ -21,8 +22,10 @@ describe("getRuns() function", () => {
 	    ["start.uid", "58839482"],
 	    ["stop.exit_status", "success"],
 	]);
-	await getRuns({ pageOffset: 10, pageLimit: 20 , client: client, filters: filters });
+	await getRuns({ pageOffset: 10, pageLimit: 20 , client: client, filters: filters, catalog: "scans"});
 	expect(client.get.mock.calls).toHaveLength(1);
+	const url = client.get.mock.calls[0][0];
+	expect(url).toEqual("search/scans");
 	const params = client.get.mock.calls[0][1].params;
 	const keys = params.getAll("filter[eq][condition][key]");
 	expect(keys).toEqual(["start.uid", "stop.exit_status"]);

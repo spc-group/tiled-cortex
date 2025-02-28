@@ -144,7 +144,18 @@ describe("run table row", () => {
 	const filename = Object.values(link)[0].memoizedProps.download;
 	expect(filename).toEqual("883847-CrO3-NiK.xdi");
     });
-
+    it("shows the data-run icon", () => {
+ 	const run = {
+	    "specs": [
+		{
+		    "name": "XASRun",
+		    "version": "1.0"
+		}
+	    ],
+	};
+	render(<Row run={run} apiUri={"https://remotehost/api/v1/"} />);
+	const icon = screen.getByTitle("Data run icon");
+    });
     it("has the correct columns", () => {
         const run = {
             "start.uid": "4e4a2ec3-5d33-4f47-b6a3-15cfdf1e41aa",
@@ -155,7 +166,6 @@ describe("run table row", () => {
 	    "start.time": new Date(0),
 	    "start.proposal": "2",
 	    "start.esaf": "13",
-
         };
 	render(<table><tbody><Row run={run} /></tbody></table>);
         expect(screen.getByText("4e4a2ec3-5d33-4f47-b6a3-15cfdf1e41aa")).toBeInTheDocument();
