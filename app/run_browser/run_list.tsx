@@ -66,6 +66,7 @@ export default function RunList() {
     }
     const filterStates = columns.map((col) => col.filter);
     const [searchText, setSearchText] = useState("");
+    const [standardsOnly, setStandardsOnly] = useState(false);
     const catalog = "scans";
 
     const loadRuns = async () => {
@@ -76,20 +77,20 @@ export default function RunList() {
                 filters.set(col.field, col.filter);
             }
         }
-	const theRuns = await getRuns({filters, pageLimit, pageOffset, sortField, catalog, searchText});
+	const theRuns = await getRuns({filters, pageLimit, pageOffset, sortField, catalog, searchText, standardsOnly});
         return theRuns;
     };
 
     // Query for retrieving data for the list of runs
     const { isLoading, error, data } = useQuery({
-        queryKey: ['all-runs', sortField, pageLimit, pageOffset, searchText, ...filterStates],
+        queryKey: ['all-runs', sortField, pageLimit, pageOffset, searchText, standardsOnly, ...filterStates],
         queryFn: loadRuns,
     });
-    if (error !== null) {
-	return (<div>{error.code} - {error.message}</div>);
-    }
     let allRuns;
-    if (isLoading) {
+    if (error) {
+        const modal = document.getElementById("errorModal").showModal();
+    }
+    if (isLoading || error) {
 	allRuns = [];
     } else {
 	allRuns = data.runs;
@@ -114,7 +115,14 @@ export default function RunList() {
                      placeholder="Search (full words)…"
                      onChange={(e) => setSearchText(e.target.value)} />
             </label>
-            
+            <label className="inline">
+              <input type="checkbox"
+                     title="Standards checkbox"
+                     checked={standardsOnly}
+                     className="toggle"
+                     onChange={(e) => setStandardsOnly(e.target.checked)} />
+              Standards only
+            </label>
             <button className="btn btn-primary float-right">
               <PresentationChartLineIcon className="size-5 inline" />Plot
             </button>
@@ -122,8 +130,21 @@ export default function RunList() {
           </div>
 
           <div className="relative overflow-x-auto">
-	    <RunTable runs={allRuns} columns={columns} sortField={sortField} setSortField={setSortField} />
+	     <RunTable runs={allRuns} columns={columns} sortField={sortField} setSortField={setSortField} />
           </div>
+          {/* Error reporting */}
+          <dialog id="errorModal" className="modal">
+            <div className="modal-box">
+              <h3 className="font-bold text-lg">{error ? error.code : null}</h3>
+              <p className="py-4">{error ? error.message : null}</p>
+              <div className="modal-action">
+                <form method="dialog">
+                  {/* if there is a button in form, it will close the modal */}
+                  <button className="btn">OK</button>
+                </form>
+              </div>
+            </div>
+          </dialog>
         </div>
     );
 }

@@ -17,7 +17,7 @@ export const getApiInfo = async () => {
 
 
 // Retrieve set of runs metadata from the API
-export const getRuns = async ({ pageOffset, pageLimit, filters = new Map(), client = v1Client, sortField= null, catalog = "scans", searchText}) => {
+export const getRuns = async ({pageOffset, pageLimit, filters = new Map(), client = v1Client, sortField= null, catalog = "scans", searchText, standardsOnly = false}) => {
     // Set up query parameters
     const params = new URLSearchParams();
     if (sortField !== null) {
@@ -31,7 +31,10 @@ export const getRuns = async ({ pageOffset, pageLimit, filters = new Map(), clie
 	params.append("filter[eq][condition][key]", field);
 	params.append("filter[eq][condition][value]", `"${value}"`);
     }
-    console.log(searchText);
+    if (standardsOnly) {
+	params.append("filter[eq][condition][key]", "start.is_standard");
+	params.append("filter[eq][condition][value]", true);
+    }
     if (searchText !== undefined) {
 	
 	params.append("filter[fulltext][condition][text]", searchText);

@@ -119,5 +119,16 @@ describe("run list", () => {
         expect(getRuns.mock.calls[0][0]["searchText"]).toEqual("m");
 
     });
+    it("filters standards only", async () => {
+        const checkbox = screen.getByTitle("Standards checkbox");
+        getRuns.mockClear();
+        await user.click(checkbox);
+        expect(getRuns.mock.calls).toHaveLength(1);
+        expect(getRuns.mock.calls[0][0]["standardsOnly"]).toEqual(true);
+        await user.click(checkbox);
+        expect(getRuns.mock.calls).toHaveLength(2);
+        expect(getRuns.mock.calls[1][0]["standardsOnly"]).toEqual(false);
+
+    });
 });
 
