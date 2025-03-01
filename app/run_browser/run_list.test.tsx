@@ -91,7 +91,8 @@ describe("run list", () => {
 	    render(
                 <QueryClientProvider client={queryClient}>
                   <RunList />
-                </QueryClientProvider>);
+                </QueryClientProvider>
+            );
 	});
 	user = userEvent.setup();
 
@@ -102,8 +103,7 @@ describe("run list", () => {
         // For now just use a default
         expect(getRuns.mock.calls[0][0]["catalog"]).toEqual("scans");
     });
-    
-    it("applies filters", async () => {
+    it("applies column filters", async () => {
         // Find a filter text box
         const textbox = screen.getByPlaceholderText("Filter UID");
 	getRuns.mockClear();
@@ -111,6 +111,13 @@ describe("run list", () => {
 	expect(getRuns.mock.calls).toHaveLength(1);
 	expect(getRuns.mock.calls[0][0]["filters"]).toEqual(new Map([["start.uid", "a"]]));
     });
+    it("applies generic filters", async () => {
+        const textbox = screen.getByPlaceholderText("Search (full words)…");
+        getRuns.mockClear();
+        await user.type(textbox, "m");
+        expect(getRuns.mock.calls).toHaveLength(1);
+        expect(getRuns.mock.calls[0][0]["searchText"]).toEqual("m");
 
+    });
 });
 

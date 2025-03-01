@@ -17,7 +17,7 @@ export const getApiInfo = async () => {
 
 
 // Retrieve set of runs metadata from the API
-export const getRuns = async ({ pageOffset, pageLimit, filters = new Map(), client = v1Client, sortField= null, catalog = "scans"}) => {
+export const getRuns = async ({ pageOffset, pageLimit, filters = new Map(), client = v1Client, sortField= null, catalog = "scans", searchText}) => {
     // Set up query parameters
     const params = new URLSearchParams();
     if (sortField !== null) {
@@ -30,6 +30,11 @@ export const getRuns = async ({ pageOffset, pageLimit, filters = new Map(), clie
     for (let [field, value] of filters) {
 	params.append("filter[eq][condition][key]", field);
 	params.append("filter[eq][condition][value]", `"${value}"`);
+    }
+    console.log(searchText);
+    if (searchText !== undefined) {
+	
+	params.append("filter[fulltext][condition][text]", searchText);
     }
     // retrieve list of runs from the API
     const response = await client.get(`search/${catalog}`, {

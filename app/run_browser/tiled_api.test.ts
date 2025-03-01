@@ -22,13 +22,15 @@ describe("getRuns() function", () => {
 	    ["start.uid", "58839482"],
 	    ["stop.exit_status", "success"],
 	]);
-	await getRuns({ pageOffset: 10, pageLimit: 20 , client: client, filters: filters, catalog: "scans"});
+	await getRuns({ pageOffset: 10, pageLimit: 20 , client: client, filters: filters, searchText: "super awesome experiment", catalog: "scans"});
 	expect(client.get.mock.calls).toHaveLength(1);
 	const url = client.get.mock.calls[0][0];
 	expect(url).toEqual("search/scans");
 	const params = client.get.mock.calls[0][1].params;
 	const keys = params.getAll("filter[eq][condition][key]");
 	expect(keys).toEqual(["start.uid", "stop.exit_status"]);
+	expect(params.get("filter[fulltext][condition][text]")).toEqual("super awesome experiment");
+
     });
     it("applies a sort field", async () => {
 	await getRuns({ pageOffset: 10, pageLimit: 20 , client: client, sortField: "-start.time" });

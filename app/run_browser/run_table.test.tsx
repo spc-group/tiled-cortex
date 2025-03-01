@@ -134,7 +134,14 @@ describe("run table row", () => {
             specs: [{name: "XASRun", version: "1.0"}],
             structure_family: "container",
         };
-	render(<QueryClientProvider client={queryClient}><Row run={run} apiUri={"https://remotehost/api/v1/"} /></QueryClientProvider>);
+	render(
+	    <QueryClientProvider client={queryClient}>
+	      <table>
+                <tbody>
+                  <Row run={run} apiUri={"https://remotehost/api/v1/"} />
+                </tbody>
+              </table>
+            </QueryClientProvider>);
 	const link = screen.getByText("xdi");
         expect(link).toBeInTheDocument();
         const href = Object.values(link)[0].memoizedProps.href;
@@ -153,7 +160,13 @@ describe("run table row", () => {
 		}
 	    ],
 	};
-	render(<Row run={run} apiUri={"https://remotehost/api/v1/"} />);
+	render(
+            <table>
+              <tbody>
+            <Row run={run} apiUri={"https://remotehost/api/v1/"} />
+            </tbody>
+            </table>
+        );
 	const icon = screen.getByTitle("Data run icon");
     });
     it("has the correct columns", () => {

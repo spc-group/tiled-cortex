@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { PresentationChartLineIcon } from '@heroicons/react/24/solid';
+import { PresentationChartLineIcon, MagnifyingGlassIcon } from '@heroicons/react/24/solid';
 import {
   QueryClient,
   QueryClientProvider,
@@ -65,6 +65,7 @@ export default function RunList() {
         [ col.filter, col.setFilter ] = useState("");
     }
     const filterStates = columns.map((col) => col.filter);
+    const [searchText, setSearchText] = useState("");
     const catalog = "scans";
 
     const loadRuns = async () => {
@@ -75,13 +76,13 @@ export default function RunList() {
                 filters.set(col.field, col.filter);
             }
         }
-	const theRuns = await getRuns({filters, pageLimit, pageOffset, sortField, catalog});
+	const theRuns = await getRuns({filters, pageLimit, pageOffset, sortField, catalog, searchText});
         return theRuns;
     };
 
     // Query for retrieving data for the list of runs
     const { isLoading, error, data } = useQuery({
-        queryKey: ['all-runs', sortField, pageLimit, pageOffset, ...filterStates],
+        queryKey: ['all-runs', sortField, pageLimit, pageOffset, searchText, ...filterStates],
         queryFn: loadRuns,
     });
     if (error !== null) {
@@ -104,6 +105,16 @@ export default function RunList() {
                        setPageLimit={setPageLimit}
                        pageOffset={pageOffset}
                        setPageOffset={setPageOffset} />
+            {/* Search box */}
+            <label className="input mx-4">
+              <MagnifyingGlassIcon className="size-4" />
+              <input type="search"
+                     value={searchText}
+                     className="grow"
+                     placeholder="Search (full words)…"
+                     onChange={(e) => setSearchText(e.target.value)} />
+            </label>
+            
             <button className="btn btn-primary float-right">
               <PresentationChartLineIcon className="size-5 inline" />Plot
             </button>
