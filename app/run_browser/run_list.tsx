@@ -62,7 +62,9 @@ export default function RunList() {
     // State variables to keep track of how to filer the runs
     const columns = [...allColumns];
     for (let col of columns) {
-        [ col.filter, col.setFilter ] = useState("");
+        if (col.filter === undefined) {
+            [ col.filter, col.setFilter ] = useState("");
+        }
     }
     const filterStates = columns.map((col) => col.filter);
     const [searchText, setSearchText] = useState("");
@@ -126,7 +128,6 @@ export default function RunList() {
             <button className="btn btn-primary float-right">
               <PresentationChartLineIcon className="size-5 inline" />Plot
             </button>
-
           </div>
 
           <div className="relative overflow-x-auto">

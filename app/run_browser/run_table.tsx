@@ -42,6 +42,7 @@ export const allColumns = [
         label:  "Start",
         name: "start-time",
         field: "start.time",
+	filter: null,
     },
     {
         label:  "UID",
@@ -97,10 +98,11 @@ export default function RunTable({runs, selectRun, sortField, setSortField, colu
                           { col.label } <SortIcon fieldName={col.field} sortField={sortField} />
                         </div>
                         <div>
-                          <input type="text"
-                                 placeholder={"Filter " + col.label}
-                                 className="input input-xs input-ghost w-full max-w-xs" value={col.filter}
-                                 onChange={(e) => col.setFilter(e.target.value)} />
+                           <input type="text"
+                                  placeholder={"Filter " + col.label}
+                                  className="input input-xs input-ghost align-top w-full max-w-xs" value={col.filter}
+                                  disabled={col.filter === null}
+                                  onChange={(e) => col.setFilter(e.target.value)} />
                         </div>
                       </th>
                   );
