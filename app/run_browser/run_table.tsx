@@ -12,7 +12,7 @@ export const SortIcon = ({fieldName, sortField}) => {
     } else if (sortField == "-" + fieldName) {
         return <ArrowUpIcon title="Sort descending" className="size-4 inline" />;
     } else {
-        return null;
+        return (<></>);
     }
 };
 
@@ -62,10 +62,22 @@ export const allColumns = [
 ];
 
 
-export default function RunTable({runs, selectRun, sortField, setSortField, columns=allColumns}) {
+export const SkeletonRow = ({numColumns}) => {
+    return (
+        <tr>
+          {/* Empty columns for icons (don't need skeletons) */}
+          <td></td><td></td>
+          {[...Array(numColumns)].map(() => {
+                  return (<th><div className="skeleton h-6 w-24"></div></th>);
+              })}
+        </tr>
+    );
+};
+
+
+export default function RunTable({runs=[], selectRun, sortField, setSortField, columns=allColumns, isLoadingRuns=false}) {
     // A table for displaying a sequence of runs to the user
     // Includes widgets for sorting, etc
-
     // Curried version of setSortField for each column
     const sortFieldParser = (field) => {
         return (event) => {
@@ -83,13 +95,12 @@ export default function RunTable({runs, selectRun, sortField, setSortField, colu
             });
         };
     };
-
     // Render
     return (
         <table className="table table-pin-rows w-full text-left rtl:text-right text-gray-500 dark:text-gray-400">
           <thead className="text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
             <tr>
-              <th className="text-center"><CheckIcon className="inline" data="Selection checkmark" /></th>
+              <th className="text-center"><CheckIcon className="inline size-6" data="Selection checkmark" /></th>
               <th className="text-center"><ArrowDownTrayIcon className="size-6 inline" title="Download icon" /></th>
               {columns.map((col) => {
                   return (
@@ -110,23 +121,26 @@ export default function RunTable({runs, selectRun, sortField, setSortField, colu
             </tr>
           </thead>
           <tbody>
-            {runs ? runs.map(run => (
-                <Row run={run} key={run["start.uid"]} onSelect={selectRun} columns={columns} />
-            )) : []}
+            {
+                isLoadingRuns ?
+                    // Show a skeleton table while we wait for the API
+                    [...Array(10)].map(() =>
+                        <SkeletonRow numColumns={columns.length} />
+                    )
+                    :
+                    // Show actual list of runs in the table
+                    runs.map(run => 
+                        <Row run={run} key={run["start.uid"]} onSelect={selectRun} columns={columns} />
+                    )
+            }
           </tbody>
         </table>
     );
 };
 
 
-const exportFormat = (mimetype) => {
-    return {
-    }
-};
-
 export function Row({ run, onSelect, columns=allColumns, apiUri }) {
     // A row in the run table for a given run
-    
     // Handler for selecting a run
     const handleCheckboxChecked = (event) => {
         onSelect(run['start.uid'], event.target.checked);

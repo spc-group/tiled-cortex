@@ -62,14 +62,12 @@ export default function RunList() {
     // State variables to keep track of how to filer the runs
     const columns = [...allColumns];
     for (let col of columns) {
-        if (col.filter === undefined) {
-            [ col.filter, col.setFilter ] = useState("");
-        }
+        [ col.filter, col.setFilter ] = useState("");
     }
     const filterStates = columns.map((col) => col.filter);
     const [searchText, setSearchText] = useState("");
     const [standardsOnly, setStandardsOnly] = useState(false);
-    const catalog = "scans";
+    const catalog = "testing";
 
     const loadRuns = async () => {
         // Prepare list of filters
@@ -131,7 +129,7 @@ export default function RunList() {
           </div>
 
           <div className="relative overflow-x-auto">
-	     <RunTable runs={allRuns} columns={columns} sortField={sortField} setSortField={setSortField} />
+	    <RunTable runs={allRuns} columns={columns} sortField={sortField} setSortField={setSortField} isLoadingRuns={isLoading} />
           </div>
           {/* Error reporting */}
           <dialog id="errorModal" className="modal">

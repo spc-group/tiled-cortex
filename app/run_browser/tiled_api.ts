@@ -1,6 +1,6 @@
 import axios from "axios";
 
-let envHost = import.meta.env.VITE_TILED_HOST ;
+let envHost = import.meta.env.VITE_TILED_URI ;
 export const tiledHost = envHost === undefined ? "" : envHost;
 export const tiledUri = tiledHost + "/v1/";
 
