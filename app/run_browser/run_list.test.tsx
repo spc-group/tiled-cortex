@@ -107,16 +107,18 @@ describe("run list", () => {
         // Find a filter text box
         const textbox = screen.getByPlaceholderText("Filter UID");
 	getRuns.mockClear();
-        await user.type(textbox, "a");
+        await user.type(textbox, "8675309");
+        await new Promise(r => setTimeout(r, 500));  // Wait for debounce
 	expect(getRuns.mock.calls).toHaveLength(1);
-	expect(getRuns.mock.calls[0][0]["filters"]).toEqual(new Map([["start.uid", "a"]]));
+	expect(getRuns.mock.calls[0][0]["filters"]).toEqual(new Map([["start.uid", "8675309"]]));
     });
     it("applies generic filters", async () => {
         const textbox = screen.getByPlaceholderText("Search (full words)…");
         getRuns.mockClear();
-        await user.type(textbox, "m");
+        await user.type(textbox, "Thorium");
+        await new Promise(r => setTimeout(r, 500));  // Wait for debounce
         expect(getRuns.mock.calls).toHaveLength(1);
-        expect(getRuns.mock.calls[0][0]["searchText"]).toEqual("m");
+        expect(getRuns.mock.calls[0][0]["searchText"]).toEqual("Thorium");
 
     });
     it("filters standards only", async () => {

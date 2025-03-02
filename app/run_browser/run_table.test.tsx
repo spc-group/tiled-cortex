@@ -90,7 +90,7 @@ describe("run table row", () => {
                 ...await importOriginal(),
                 useQuery: () => ({
                     isLoading: false,
-                    error: "hello",
+                    error: null,
                     data: {
                         formats: {
                             "container": [

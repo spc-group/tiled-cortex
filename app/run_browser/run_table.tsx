@@ -67,8 +67,8 @@ export const SkeletonRow = ({numColumns}) => {
         <tr>
           {/* Empty columns for icons (don't need skeletons) */}
           <td></td><td></td>
-          {[...Array(numColumns)].map(() => {
-                  return (<th><div className="skeleton h-6 w-24"></div></th>);
+          {[...Array(numColumns).keys()].map((idx) => {
+              return (<td key={`skeleton-row-${idx}`}><div className="skeleton h-6 w-24"></div></td>);
               })}
         </tr>
     );
@@ -102,6 +102,7 @@ export default function RunTable({runs=[], selectRun, sortField, setSortField, c
             <tr>
               <th className="text-center"><CheckIcon className="inline size-6" data="Selection checkmark" /></th>
               <th className="text-center"><ArrowDownTrayIcon className="size-6 inline" title="Download icon" /></th>
+              <th className="text-center"><BeakerIcon className="size-6 inline" title="Scientific scan" /></th>
               {columns.map((col) => {
                   return (
                       <th key={"column-" + col.name}>
@@ -124,8 +125,8 @@ export default function RunTable({runs=[], selectRun, sortField, setSortField, c
             {
                 isLoadingRuns ?
                     // Show a skeleton table while we wait for the API
-                    [...Array(10)].map(() =>
-                        <SkeletonRow numColumns={columns.length} />
+                [...Array(10).keys()].map(idx =>
+                        <SkeletonRow key={`skeleton-row-${idx}`} numColumns={columns.length} />
                     )
                     :
                     // Show actual list of runs in the table
@@ -143,18 +144,20 @@ export function Row({ run, onSelect, columns=allColumns, apiUri }) {
     // A row in the run table for a given run
     // Handler for selecting a run
     const handleCheckboxChecked = (event) => {
-        onSelect(run['start.uid'], event.target.checked);
+        if (onSelect !== undefined) {
+            onSelect(run['start.uid'], event.target.checked);
+        }
     };
 
     // Decide which export formats we support
     const { isLoading, error, data } = useQuery({
         queryKey: ['api-info'],
         queryFn: async () => {
-            return await getApiInfo();
+            return await getApiInfo({});
         },
     });
     const exportFormats = [];
-    if (!isLoading) {
+    if (!isLoading && !error) {
         // Add formats from structure family
         for (let mimeType of data.formats[run.structure_family] || []) {
             const aliases = data.aliases[run.structure_family][mimeType] || [];

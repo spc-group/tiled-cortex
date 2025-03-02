@@ -11,13 +11,14 @@ export const v1Client = axios.create({
 
 
 // Retrieve the info about API accepted formats, etc.
-export const getApiInfo = async () => {
-    console.log("Hello");
+export const getApiInfo = async ({client=v1Client}) => {
+    const response = await client.get("");
+    return response.data;
 };
 
 
 // Retrieve set of runs metadata from the API
-export const getRuns = async ({pageOffset, pageLimit, filters = new Map(), client = v1Client, sortField= null, catalog = "scans", searchText, standardsOnly = false}) => {
+export const getRuns = async ({pageOffset, pageLimit, filters = new Map(), client = v1Client, sortField= null, catalog = "scans", searchText = "", standardsOnly = false}) => {
     // Set up query parameters
     const params = new URLSearchParams();
     if (sortField !== null) {
@@ -28,14 +29,14 @@ export const getRuns = async ({pageOffset, pageLimit, filters = new Map(), clien
     params.append("page[limit]", pageLimit);
     let value;
     for (let [field, value] of filters) {
-	params.append("filter[eq][condition][key]", field);
-	params.append("filter[eq][condition][value]", `"${value}"`);
+	params.append("filter[contains][condition][key]", field);
+	params.append("filter[contains][condition][value]", `"${value}"`);
     }
     if (standardsOnly) {
 	params.append("filter[eq][condition][key]", "start.is_standard");
 	params.append("filter[eq][condition][value]", true);
     }
-    if (searchText !== undefined) {
+    if (searchText !== "") {
 	
 	params.append("filter[fulltext][condition][text]", searchText);
     }

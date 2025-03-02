@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-query';
 
 import RunTable, { allColumns } from "./run_table";
+import useDebounce from "./debounce";
 import { getRuns } from "./tiled_api";
 
 
@@ -63,11 +64,13 @@ export default function RunList() {
     const columns = [...allColumns];
     for (let col of columns) {
         [ col.filter, col.setFilter ] = useState("");
+	col.debouncedFilter = useDebounce(col.filter);
     }
-    const filterStates = columns.map((col) => col.filter);
+    const filterStates = columns.map((col) => col.debouncedFilter);
     const [searchText, setSearchText] = useState("");
+    const debouncedSearchText = useDebounce(searchText);
     const [standardsOnly, setStandardsOnly] = useState(false);
-    const catalog = "testing";
+    const catalog = "scans";
 
     const loadRuns = async () => {
         // Prepare list of filters
@@ -77,13 +80,13 @@ export default function RunList() {
                 filters.set(col.field, col.filter);
             }
         }
-	const theRuns = await getRuns({filters, pageLimit, pageOffset, sortField, catalog, searchText, standardsOnly});
+	const theRuns = await getRuns({filters, pageLimit, pageOffset, sortField, catalog, searchText: debouncedSearchText, standardsOnly});
         return theRuns;
     };
 
     // Query for retrieving data for the list of runs
     const { isLoading, error, data } = useQuery({
-        queryKey: ['all-runs', sortField, pageLimit, pageOffset, searchText, standardsOnly, ...filterStates],
+        queryKey: ['all-runs', sortField, pageLimit, pageOffset, debouncedSearchText, standardsOnly, ...filterStates],
         queryFn: loadRuns,
     });
     let allRuns;
