@@ -11,8 +11,8 @@ function classNames(...classes) {
 
 export default function Navbar() {
     const navigation = [
-        { name: 'Runs', href: 'runs', current: useMatch("/runs") },
-        { name: 'Beamlines', href: 'beamlines', current: useMatch("/beamlines") },
+        { name: 'Runs', href: '/catalog', current: useMatch("/runs") },
+        { name: 'Beamlines', href: '/beamlines', current: useMatch("/beamlines") },
     ];
     
 

@@ -1,5 +1,6 @@
 import * as React from "react";
 import '@testing-library/jest-dom/vitest';
+import {BrowserRouter} from "react-router";
 import { expect, describe, it, beforeEach, afterEach, vi, cleanup } from "vitest";
 import { render, screen, within, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event'
@@ -31,7 +32,7 @@ describe("run table", () => {
 	    {"start.uid": "4e4a2ec3-5d33-4f47-b6a3-15cfdf1e41aa"},
 	    {"start.uid": "391c9a55-8dfa-4faa-be49-e60140596b7c"},
 	];
-	render(<RunTable runs={runs} />);
+	render(<BrowserRouter><RunTable runs={runs} /></BrowserRouter>);
 	expect(screen.getByText("4e4a2ec3-5d33-4f47-b6a3-15cfdf1e41aa")).toBeInTheDocument();
 	expect(screen.getByText("391c9a55-8dfa-4faa-be49-e60140596b7c")).toBeInTheDocument();
     });
@@ -39,7 +40,7 @@ describe("run table", () => {
 	const selectRun = vi.fn((uid, isSelected) => {});
 	// Prepare the UI
 	const runs = [{"start.uid": "4e4a2ec3-5d33-4f47-b6a3-15cfdf1e41aa"}];
-	render(<RunTable runs={runs} selectRun={selectRun} />);
+	render(<BrowserRouter><RunTable runs={runs} selectRun={selectRun} /></BrowserRouter>);
 	const checkbox = screen.getByRole("checkbox");
 	// Check the box
 	await user.click(checkbox);
@@ -53,7 +54,6 @@ describe("run table", () => {
 	expect(selectRun.mock.calls[0][1]).toBe(true);
 	expect(selectRun.mock.calls[1][0]).toEqual("4e4a2ec3-5d33-4f47-b6a3-15cfdf1e41aa");
 	expect(selectRun.mock.calls[1][1]).toBe(false);
-
     });
     it("sorts ascending by column", async () => {
 	render(<RunTable runs={[]} setSortField={setSortField} sortField={null} />);
@@ -128,25 +128,28 @@ describe("run table row", () => {
     });
     it("shows export buttons", () => {
         const run = {
-            uid: "883847",
+            "start.uid": "883847",
 	    "start.sample_name": "CrO3",
 	    "start.scan_name": "NiK",
             specs: [{name: "XASRun", version: "1.0"}],
             structure_family: "container",
         };
 	render(
+            <BrowserRouter>
 	    <QueryClientProvider client={queryClient}>
 	      <table>
                 <tbody>
                   <Row run={run} apiUri={"https://remotehost/api/v1/"} />
                 </tbody>
               </table>
-            </QueryClientProvider>);
+            </QueryClientProvider>
+            </BrowserRouter>
+        );
 	const link = screen.getByText("xdi");
         expect(link).toBeInTheDocument();
         const href = Object.values(link)[0].memoizedProps.href;
         expect(href).toContain("https://remotehost/api/v1/");
-        expect(href).toContain(run.uid);
+        expect(href).toContain(run['start.uid']);
         expect(href).toContain("format=text/x-xdi");
 	const filename = Object.values(link)[0].memoizedProps.download;
 	expect(filename).toEqual("883847-CrO3-NiK.xdi");
@@ -161,11 +164,13 @@ describe("run table row", () => {
 	    ],
 	};
 	render(
+            <BrowserRouter>
             <table>
               <tbody>
             <Row run={run} apiUri={"https://remotehost/api/v1/"} />
             </tbody>
             </table>
+            </BrowserRouter>
         );
 	const icon = screen.getByTitle("Data run icon");
     });
@@ -180,7 +185,7 @@ describe("run table row", () => {
 	    "start.proposal": "2",
 	    "start.esaf": "13",
         };
-	render(<table><tbody><Row run={run} /></tbody></table>);
+	render(<BrowserRouter><table><tbody><Row run={run} /></tbody></table></BrowserRouter>);
         expect(screen.getByText("4e4a2ec3-5d33-4f47-b6a3-15cfdf1e41aa")).toBeInTheDocument();
         expect(screen.getByText("rel_scan")).toBeInTheDocument();
         expect(screen.getByText("SrN03")).toBeInTheDocument();

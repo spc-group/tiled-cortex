@@ -3,6 +3,7 @@ import { BeakerIcon } from '@heroicons/react/24/outline';
 import { useQuery } from '@tanstack/react-query';
 
 import { useState } from "react";
+import { Link } from "react-router";
 import { tiledUri, getApiInfo } from "./tiled_api";
 
 
@@ -66,7 +67,7 @@ export const SkeletonRow = ({numColumns}) => {
     return (
         <tr>
           {/* Empty columns for icons (don't need skeletons) */}
-          <td></td><td></td>
+          <td></td><td></td><td></td>
           {[...Array(numColumns).keys()].map((idx) => {
               return (<td key={`skeleton-row-${idx}`}><div className="skeleton h-6 w-24"></div></td>);
               })}
@@ -75,7 +76,7 @@ export const SkeletonRow = ({numColumns}) => {
 };
 
 
-export default function RunTable({runs=[], selectRun, sortField, setSortField, columns=allColumns, isLoadingRuns=false}) {
+export default function RunTable({runs=[], selectRun, sortField, setSortField, columns=allColumns, isLoadingRuns=false, catalog}) {
     // A table for displaying a sequence of runs to the user
     // Includes widgets for sorting, etc
     // Curried version of setSortField for each column
@@ -131,7 +132,7 @@ export default function RunTable({runs=[], selectRun, sortField, setSortField, c
                     :
                     // Show actual list of runs in the table
                     runs.map(run => 
-                        <Row run={run} key={run["start.uid"]} onSelect={selectRun} columns={columns} />
+                        <Row run={run} key={run["start.uid"]} onSelect={selectRun} columns={columns} catalog={catalog} />
                     )
             }
           </tbody>
@@ -140,7 +141,7 @@ export default function RunTable({runs=[], selectRun, sortField, setSortField, c
 };
 
 
-export function Row({ run, onSelect, columns=allColumns, apiUri }) {
+export function Row({ run, onSelect, columns=allColumns, apiUri=tiledUri, catalog}) {
     // A row in the run table for a given run
     // Handler for selecting a run
     const handleCheckboxChecked = (event) => {
@@ -158,27 +159,34 @@ export function Row({ run, onSelect, columns=allColumns, apiUri }) {
     });
     const exportFormats = [];
     if (!isLoading && !error) {
+	const defaultFilename = (aliases: string[]) => {
+	    let fragments = [
+		run["start.uid"] === undefined ? null : run["start.uid"].split("-")[0],
+		run["start.sample_name"],
+		run["start.scan_name"],
+		run["start.plan_name"]
+	    ];
+	    fragments = fragments.filter((frag) => frag);
+	    const suffix = aliases.length > 0 ? `.${aliases[0]}` : "";
+	    return `${fragments.join('-')}${suffix}`;
+	};
         // Add formats from structure family
         for (let mimeType of data.formats[run.structure_family] || []) {
             const aliases = data.aliases[run.structure_family][mimeType] || [];
             exportFormats.push({
                 mimeType: mimeType,
                 label: [...aliases, mimeType][0],
-                defaultFilename: `test_run.${run.uid}`,
+                defaultFilename: defaultFilename(aliases),
             });
         }
         // Add formats from specs
         for (let spec of run.specs || []) {
             for (let mimeType of data.formats[spec.name] || []) {
                 const aliases = data.aliases[spec.name][mimeType] || [];
-                const uidFragment = run.uid === undefined ? "" : run.uid.split("-")[0];
-                const suffix = aliases.length > 0 ? `.${aliases[0]}` : "";
-                const scanName = run['start.scan_name'];
-                const sampleName = run["start.sample_name"];
                 exportFormats.push({
                     mimeType: mimeType,
                     label: [...aliases, mimeType][0],
-                    defaultFilename: `${uidFragment}-${sampleName}-${scanName}${suffix}`,
+                    defaultFilename: defaultFilename(aliases),
                 });
             }
         }
@@ -189,7 +197,7 @@ export function Row({ run, onSelect, columns=allColumns, apiUri }) {
         start_time = run.start_time.toLocaleString();
     }
     const uid = run['start.uid'];
-    const runUri = apiUri + "container/full/" + run.uid;
+    const runUri = `${apiUri}container/full/${catalog}/${run['start.uid']}`;
     const specs = run.specs === undefined ? [] : run.specs;
     const specNames = specs.map((spec) => spec.name);
     const isBlueskyRun = specNames.includes("BlueskyRun");
@@ -207,7 +215,7 @@ export function Row({ run, onSelect, columns=allColumns, apiUri }) {
                 {
                     exportFormats.map((format) => {
                         return (
-                            <li key={`${run.uid}-${format.mimeType}`}>
+                            <li key={`${run['start.uid']}-${format.mimeType}`}>
 			      <a href={`${runUri}?format=${format.mimeType}`}
                                  download={format.defaultFilename}>
 			        {format.label}
@@ -224,7 +232,6 @@ export function Row({ run, onSelect, columns=allColumns, apiUri }) {
                 <BeakerIcon title="Data run icon" className="size-4" />
             }
           </td>
-
           
           {columns.map((col) => {
               let value = run[col.field];
@@ -233,7 +240,9 @@ export function Row({ run, onSelect, columns=allColumns, apiUri }) {
                   value = value.toLocaleString();
               }
               return (
-                  <td key={uid+col.name}>{value}</td>
+                  <td key={uid+col.name}>
+                    <Link to={uid}>{value}</Link>
+                  </td>
               );
           })}
         </tr>

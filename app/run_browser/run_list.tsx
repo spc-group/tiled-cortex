@@ -132,7 +132,7 @@ export default function RunList() {
           </div>
 
           <div className="relative overflow-x-auto">
-	    <RunTable runs={allRuns} columns={columns} sortField={sortField} setSortField={setSortField} isLoadingRuns={isLoading} />
+	    <RunTable runs={allRuns} columns={columns} sortField={sortField} setSortField={setSortField} isLoadingRuns={isLoading} catalog={catalog} />
           </div>
           {/* Error reporting */}
           <dialog id="errorModal" className="modal">

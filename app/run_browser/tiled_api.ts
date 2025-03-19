@@ -17,6 +17,16 @@ export const getApiInfo = async ({client=v1Client}) => {
 };
 
 
+export const getMetadata = async ({path, client=v1Client}) => {
+    const response = await client.get(`metadata/${encodeURIComponent(path)}`, {
+	params: {
+	}
+    });
+    console.log(response);
+    return response.data;
+};
+
+
 // Retrieve set of runs metadata from the API
 export const getRuns = async ({pageOffset, pageLimit, filters = new Map(), client = v1Client, sortField= null, catalog = "scans", searchText = "", standardsOnly = false}) => {
     // Set up query parameters
